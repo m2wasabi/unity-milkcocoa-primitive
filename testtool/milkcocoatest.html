@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html lang="ja">
+	<head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# website: http://ogp.me/ns/website#">
+	<meta charset="utf-8">
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="content-Script-Type" content="text/javascript">
+	<meta http-equiv="content-Style-Type" content="text/css">
+	<title></title>
+	<meta property="og:url" content="">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="">
+	<meta property="og:locale" content="ja_JP">
+	<meta property="og:image" content="" />
+	<meta property="og:description" content="">
+	<link rel="shortcut icon" href="" type="image/vnd.microsoft.icon">
+	<link rel="icon" href="" type="image/vnd.microsoft.icon">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
+<style type="text/css">
+body {
+  padding-top: 50px;
+  padding-bottom: 20px;
+}
+</style>
+</head>
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Milkcocoa Unity test</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <div class="content-desc">
+        <h1>Milkcocoa Unity test</h1>
+        <p class="lead">Milkcocoa simple testing console.</p>
+      </div>
+
+      <div class="panel panel-default">
+        <div class="panel-heading"><h3>Input</h3></div>
+        <div id="apiform-body" class="panel-body">
+          <div class="form-group">
+            <label for="SendValue1">Send</label>
+            <input type="text" class="form-control" id="SendValue1" placeholder="Value">
+            <button type="button" class="btn btn-primary btn-lg btn-block" id="sendButton">Send</button>
+          </div>
+          <div class="form-group">
+            <label for="PushValue1">Push</label>
+            <input type="text" class="form-control" id="PushValue1" placeholder="Value">
+            <button type="button" class="btn btn-primary btn-lg btn-block" id="pushButton">Push</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel panel-default">
+        <div class="panel-heading"><h3>Result</h3></div>
+        <div class="content-result panel-body" id="result-body">
+        </div>
+      </div>
+
+      <footer>
+        <p>&copy; Company 2013</p>
+      </footer>
+
+    </div><!-- /.container -->
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.mlkcca.com/v0.2.8/milkcocoa.js"></script>
+<script type="text/javascript">
+$(function(){
+	// settings
+	var appId = '**********';
+	var path = 'unitytest';
+
+	function createAlert( alert_type, caption, message ) {
+	var now = new Date();
+	var datetime = '' + now.getFullYear() + '-' + ("0"+ (now.getMonth() + 1)).slice(-2) + '-' + ("0"+ now.getDate()).slice(-2) + ' ' + ("0"+ now.getHours()).slice(-2) + ':' + ("0"+ now.getMinutes()).slice(-2) + ':' + ("0"+ now.getSeconds()).slice(-2) ;
+		var insHtml = '<div class="alert alert-' + alert_type + ' alert-dismissible fade in" role="alert"><button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button><strong>' + caption + ' : </strong>' + message + '<span class="pull-right">' + datetime + '</span></div>';
+		$("#result-body").prepend(insHtml);
+	}
+
+	var milkcocoa = new MilkCocoa('https://' + appId + '.mlkcca.com', function() {
+		var ds = milkcocoa.dataStore(path);
+		ds.on('send',function(data){
+			console.log('send!', data.value);
+			createAlert('success','Send' , JSON.stringify(data.value));
+		});
+		ds.on('push',function(data){
+			console.log('push!', data.value);
+			createAlert('info','Push' , JSON.stringify(data.value));
+		});
+		ds.on('set',function(data){
+			console.log('set!', data.value);
+			createAlert('warning','Set' , JSON.stringify(data.value));
+		});
+		ds.on('remove',function(data){
+			console.log('remove!', data.value);
+			createAlert('danger','Remove' , JSON.stringify(data.value));
+		});
+		$("#sendButton").click(function(e,o){
+			ds.send({content : $("#SendValue1").val() }, function(){
+				createAlert('success','Send(self)' , $("#SendValue1").val());
+				$("#SendValue1").val('');
+			});
+		});
+		$("#pushButton").click(function(e,o){
+			ds.send({content : $("#PushValue1").val() }, function(){
+				createAlert('info','Push(self)' , $("#PushValue1").val());
+				$("#PushValue1").val('');
+			});
+		});
+	});
+});
+
+
+</script>
+</body>
+</html>
