@@ -26,149 +26,111 @@
  */
 #endregion
 
+using System;
 using System.Collections;
 using UnityEngine;
 using SocketIO;
+using System.Text;
 
-public class milkcocoa : MonoBehaviour
+public class Milkcocoa : MonoBehaviour
 {
     private SocketIOComponent socket;
+    public string appId = "io-xi0ze9taq";
+    public string dataStorePath = "unity";
 
+    bool connection = false;
+
+    public void Awake()
+    {
+        Debug.Log("Awake Milkcocoa.");
+        socket = GetComponent<SocketIOComponent>();
+        socket.url = "wss://" + appId + ".mlkcca.com/socket.io/?EIO=2&transport=websocket";
+    }
     public void Start()
     {
-        GameObject go = GameObject.Find("SocketIO");
-        socket = go.GetComponent<SocketIOComponent>();
 
         socket.On("open", OnSocketOpen);
         socket.On("error", OnSocketError);
         socket.On("close", OnSocketClose);
-        socket.On("a", OnMcCallback);
-        socket.On("b", OnMcPush);
-        socket.On("c", OnMcSet);
-        socket.On("d", OnMcRemove);
-        socket.On("e", OnMcSend);
 
-        StartCoroutine("AddEventEmitter");
+        socket.Connect();
 
-
-//        StartCoroutine("BeepBoop");
-    }
-
-    private IEnumerator BeepBoop()
-    {
-        // wait 1 seconds and continue
-        yield return new WaitForSeconds(1);
-
-        socket.Emit("beep");
-
-        // wait 3 seconds and continue
-        yield return new WaitForSeconds(3);
-
-        socket.Emit("beep");
-
-        // wait 2 seconds and continue
-        yield return new WaitForSeconds(2);
-
-        socket.Emit("beep");
-
-        // wait ONE FRAME and continue
-        yield return null;
-
-        socket.Emit("beep");
-        socket.Emit("beep");
     }
 
     public void OnSocketOpen(SocketIOEvent e)
     {
+        connection = true;
         Debug.Log("[SocketIO] Open received: " + e.name + " " + e.data);
     }
 
     public void OnSocketError(SocketIOEvent e)
     {
+        connection = false;
         Debug.Log("[SocketIO] Error received: " + e.name + " " + e.data);
     }
 
     public void OnSocketClose(SocketIOEvent e)
     {
+        connection = false;
         Debug.Log("[SocketIO] Close received: " + e.name + " " + e.data);
     }
-    public void OnMcCallback(SocketIOEvent e)
+
+    public void OnCallback(Action<SocketIOEvent> callback)
     {
-        Debug.Log("[SocketIO] McCallback received: " + e.name + " " + e.data);
-
-        if (e.data == null) { return; }
-
-        Debug.Log(
-            "#####################################################" +
-            "THIS: " + e.data.GetField("this").str +
-            "#####################################################"
-        );
+        socket.On("a", callback);
     }
-    public void OnMcPush(SocketIOEvent e)
+    public void OnPush(Action<SocketIOEvent> callback)
     {
-        Debug.Log("[SocketIO] McPush received: " + e.name + " " + e.data);
-
-        if (e.data == null) { return; }
-
-        Debug.Log(
-            "#####################################################" +
-            "THIS: " + e.data.GetField("this").str +
-            "#####################################################"
-        );
+        socket.On("b", callback);
+        AddDataStoreEvent("push", dataStorePath);
     }
-    public void OnMcSet(SocketIOEvent e)
+    public void OnSet(Action<SocketIOEvent> callback)
     {
-        Debug.Log("[SocketIO] McSet received: " + e.name + " " + e.data);
-
-        if (e.data == null) { return; }
-
-        Debug.Log(
-            "#####################################################" +
-            "THIS: " + e.data.GetField("this").str +
-            "#####################################################"
-        );
+        socket.On("c", callback);
+        AddDataStoreEvent("set", dataStorePath);
     }
-    public void OnMcRemove(SocketIOEvent e)
+    public void OnRemove(Action<SocketIOEvent> callback)
     {
-        Debug.Log("[SocketIO] McRemove received: " + e.name + " " + e.data);
-
-        if (e.data == null) { return; }
-
-        Debug.Log(
-            "#####################################################" +
-            "THIS: " + e.data.GetField("this").str +
-            "#####################################################"
-        );
+        socket.On("d", callback);
+        AddDataStoreEvent("remove", dataStorePath);
     }
-    public void OnMcSend(SocketIOEvent e)
+    public void OnSend(Action<SocketIOEvent> callback)
     {
-        Debug.Log("[SocketIO] McSend received: " + e.name + " " + e.data);
-
-        if (e.data == null) { return; }
-
-        Debug.Log(
-            "#####################################################" +
-            "THIS: " + e.data.GetField("this").str +
-            "#####################################################"
-        );
+        socket.On("e", callback);
+        AddDataStoreEvent("send", dataStorePath);
     }
-    private IEnumerator AddEventEmitter()
-    {
-        // wait 1 seconds and continue
-        yield return new WaitForSeconds(1);
-        string path = "unitytest";
-        AddDataStoreEvent("push", path);
-        AddDataStoreEvent("set", path);
-        AddDataStoreEvent("remove", path);
-        AddDataStoreEvent("send", path);
-    }
-
     private void AddDataStoreEvent(string eventname, string path)
     {
+        StartCoroutine(waitDataStoreEvent(eventname, path));
+    }
+
+    private IEnumerator waitDataStoreEvent(string eventname, string path)
+    {
+        if (!connection)
+        {
+            yield return new WaitForSeconds(1.0f);
+        }
         // add listener [send] event
         JSONObject jsonobj = new JSONObject(JSONObject.Type.OBJECT);
         jsonobj.AddField("event", eventname);
         jsonobj.AddField("path", path);
         socket.Emit("on", jsonobj);
+        yield break;
+    }
+
+    public void Send(JSONObject jsonData)
+    {
+        if(connection)
+        {
+            JSONObject jsonobj = new JSONObject(JSONObject.Type.OBJECT);
+            jsonobj.AddField("path", dataStorePath);
+            jsonobj.AddField("value", jsonData);
+            socket.Emit("send", jsonobj);
+        }
+        else
+        {
+            Debug.Log("[Milkcocoa] Not connected");
+        }
+
     }
 }

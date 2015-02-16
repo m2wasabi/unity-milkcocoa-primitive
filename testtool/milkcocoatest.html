@@ -60,6 +60,12 @@ body {
             <input type="text" class="form-control" id="PushValue1" placeholder="Value">
             <button type="button" class="btn btn-primary btn-lg btn-block" id="pushButton">Push</button>
           </div>
+          <div class="form-group">
+            <label for="SendValue2">Send Chat(Unity TextField)</label>
+            <input type="text" class="form-control" id="SendValue2" placeholder="Your Name">
+            <input type="text" class="form-control" id="SendValue3" placeholder="Message">
+            <button type="button" class="btn btn-primary btn-lg btn-block" id="chatSendButton">Push</button>
+          </div>
         </div>
       </div>
       <div class="panel panel-default">
@@ -80,7 +86,7 @@ body {
 $(function(){
 	// settings
 	var appId = '**********';
-	var path = 'unitytest';
+	var path = 'unity';
 
 	function createAlert( alert_type, caption, message ) {
 	var now = new Date();
@@ -93,7 +99,11 @@ $(function(){
 		var ds = milkcocoa.dataStore(path);
 		ds.on('send',function(data){
 			console.log('send!', data.value);
-			createAlert('success','Send' , JSON.stringify(data.value));
+			if(data.value.chat){
+				createAlert('success',decodeURIComponent(data.value.chat.name) , decodeURIComponent(data.value.chat.message));
+			} else {
+				createAlert('success','Send' , JSON.stringify(data.value));
+			}
 		});
 		ds.on('push',function(data){
 			console.log('push!', data.value);
@@ -109,14 +119,21 @@ $(function(){
 		});
 		$("#sendButton").click(function(e,o){
 			ds.send({content : $("#SendValue1").val() }, function(){
-				createAlert('success','Send(self)' , $("#SendValue1").val());
+				createAlert('success','Send(self)' , encodeURIComponent($("#SendValue1").val()));
 				$("#SendValue1").val('');
 			});
 		});
 		$("#pushButton").click(function(e,o){
 			ds.send({content : $("#PushValue1").val() }, function(){
-				createAlert('info','Push(self)' , $("#PushValue1").val());
+				createAlert('info','Push(self)' , encodeURIComponent($("#PushValue1").val()));
 				$("#PushValue1").val('');
+			});
+		});
+		$("#chatSendButton").click(function(e,o){
+			if(!$("#SendValue2").val()) $("#SendValue2").val('名無しさん')
+			ds.send({chat : {name: encodeURIComponent($("#SendValue2").val()), message:encodeURIComponent($("#SendValue3").val())} }, function(){
+				createAlert('success', $("#SendValue2").val() , $("#SendValue3").val());
+				$("#SendValue3").val('');
 			});
 		});
 	});
