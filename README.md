@@ -18,8 +18,8 @@ Includes  [fpanettieri/unity-socket.io](https://github.com/fpanettieri/unity-soc
 
 <dl>
 <dt>milkcocoa.OnSend(milkcocoaEventHandler)</dt>
-<dd>Set enenthandler function.<br>
-Now yet, eventhandler function chan defined only ONE function.</dd>
+<dd>Set enent handler function.<br>
+Now yet, event handler function can be defined only ONE function.</dd>
 <dt>milkcocoa.Send(JSONObject)</dt>
 <dd>Send message to milkcocoa server.</dd>
 </dl>
